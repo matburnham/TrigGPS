@@ -4,10 +4,9 @@
 #define PMRRC_COMMAND "$PMRRC"
 #define MESSSAGE_ID_IDENT "04"
 #define MESSSAGE_ID_FREQ "05"
-#define LIST_TYPE "1"
 
 // Calculate a checksum for a data packet
-void checksum(char* data, int len, char checksum[2])
+void checksum(char* data, unsigned int len, char checksum[2])
 {
   char c = 0;
 
@@ -22,24 +21,35 @@ void checksum(char* data, int len, char checksum[2])
   checksum[1] = (c & 0x0f) + 0x30;
 }
 
+void strcat_c (char *str, char c)
+{
+  for (;*str;str++);
+  *str++ = c; 
+  *str++ = 0;
+}
+
 // Build a remote ident input packet which can be sent out the serial port
-void remoteIdentInput(char *icao, char* message)
+// Parameters:
+//   - listType  index of list for this ident (0-9)
+//   - ident     station identifier, generally airport ICAO code
+//   - message   output buffer (TODO: size?)
+void remoteIdentInput(uint8_t listType, char *ident, char* message)
 {
   char chksum[3] = {0};
   char *chksum_start = message;
 
   strcpy(message, PMRRC_COMMAND);
-  chksum_start += strlen(message);
+  chksum_start += strlen(message); // skip command part of message for checksum
   strcat(message, MESSSAGE_ID_IDENT);
-  strcat(message, LIST_TYPE);
-  strcat(message, icao);
+  strcat_c(message, '0' + (char) listType);
+  strncat(message, ident, 4);
   checksum(chksum_start, strlen(chksum_start), chksum);
   strcat(message, chksum);
-  strcat(message, "\n"); // TODO: do they actually mean \r from <cr> or \n?
+  strcat(message, "\r\n");
 }
 
 // Build a remote frequency list packet which can be sent out the serial port
-void setRemoteFreqList(char freqType, char mhz, char khz, char* message)
+void setRemoteFreqList(uint8_t listType, char freqType, char mhz, char khz, char* message)
 {
   char chksum[3] = {0};
   char *chksum_start = message;
@@ -47,12 +57,12 @@ void setRemoteFreqList(char freqType, char mhz, char khz, char* message)
   strcpy(message, PMRRC_COMMAND);
   chksum_start += strlen(message);
   strcat(message, MESSSAGE_ID_FREQ);
-  strcat(message, LIST_TYPE);
+  strcat_c(message, '0' + (char) listType);
   strncat(message, &freqType, 1);
   strncat(message, &mhz, 1);
   strncat(message, &khz, 1);
   checksum(chksum_start, strlen(chksum_start), chksum);
   strcat(message, chksum);
-  strcat(message, "\n");	
+  strcat(message, "\r\n");
 }
 
