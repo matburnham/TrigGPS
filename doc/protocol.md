@@ -62,9 +62,7 @@ desired frequency in range of 000 to 97,5 kHz in 25kHz steps, or 0 to 39.
 ### Example Message
 `$PMRRC0511IT64<cr>`
 
-Input a ground lieclucncy type, l2l .900 MHz
-
-*/
+Input a ground frequency type, 121.900 MHz
 
 References
 ----------
